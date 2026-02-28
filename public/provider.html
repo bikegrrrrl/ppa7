@@ -39,6 +39,21 @@
     <div id="calendarGrid"></div>
  </section>
 
+<!-- Appointment Modal -->
+<div id="appointmentModal" class="modal">
+  <div class="modal-content">
+    <span id="modalClose" class="close">&times;</span>
+    <h2>Appointment Details</h2>
+    <p><strong>Start:</strong> <span id="modalStartTime"></span></p>
+    <p><strong>End:</strong> <span id="modalEndTime"></span></p>
+    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+    <p><strong>Name:</strong> <span id="modalName"></span></p>
+     <!-- Delete button -->
+    <button id="modalDeleteButton" class="delete-btn">Delete Appointment</button>
+  </div>
+</div>
+
+
     <!-- Script runs after the DOM exists -->
     <script src="provider.js"></script>
     

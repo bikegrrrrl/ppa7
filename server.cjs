@@ -51,9 +51,6 @@ function sendText(response, statusCode, message) {
 }
 
 loadAppointments();
-console.log(appointments)
-
-
 
 
 
@@ -141,7 +138,24 @@ function isZeroDuration(reqStartTime, reqEndTime) {
     return false;
 }
 
+function validateAppt(startTime, endTime) {
+    const result = validateSlotTimes(startTime, endTime);
 
+    if (!result.ok) {
+        //return {res, 400, { error: result.message });
+        return {ok: false, message: result.message };
+    }
+    if (isDuplicate(startTime, endTime))
+        return { ok: false, message: "This is a duplicate slot"
+    };
+    if (isOverlap(startTime, endTime)) 
+        return { ok: false, message: "Timeslot overlaps another"
+    };
+    if (isZeroDuration(startTime, endTime))
+        return { ok: false, message: "Appointments must be at least 1 minute long"
+    };
+    return {ok: true};
+}
 
 const server = http.createServer(function (req, res) {
     // const parsed = new URL(req.url, "http://localhost:3000");
@@ -259,11 +273,24 @@ const server = http.createServer(function (req, res) {
         });
 
         req.on("end", function() {
-            // TODO list: validate the incoming appointment fields before pushing into the array.
-            const newAppointment = JSON.parse(body);
-            appointments.push(newAppointment);
-            saveAppointments();
-            sendText(res, 200, "TODO");
+            try {
+                const newAppointment = JSON.parse(body);
+                newAppointment.id = Date.now(); // TODO use another number?
+                const validation = validateAppt(newAppointment.startTime, newAppointment.endTime);
+                if (!validation.ok) {
+                    res.writeHead(400, {"Content-Type": "application/json"});
+                    res.end(JSON.stringify({ error: validation.message }));
+                    return;
+                }
+                appointments.push(newAppointment);
+                saveAppointments();
+                // 
+                res.writeHead(201, {"Content-Type": "application/json"});
+                res.end(JSON.stringify(newAppointment));
+            } catch(err) {
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "Invalid JSON" }));
+            }
         });
     }
     else if (req.method === "DELETE" && parsedUrl.pathname.startsWith("/appointments/")) {
@@ -273,18 +300,33 @@ const server = http.createServer(function (req, res) {
         // TODO list: decide what error message to send for an invalid index.
         if (!Number.isNaN(index) && index >= 0 && index < appointments.length) {
             appointments.splice(index, 1);
-            saveAppointments();
-            sendText(res, 200, "TODO");
+            saveAppointments()
+            sendText(res, 200, ("Appointment deleted"));
+            //sendJson(res, 200, {error: "message json"});
+        }
+        else if (req.method === "DELETE" && parsedUrl.pathname.startsWith("/appointments/")) {
+            const parts = parsedUrl.pathname.split("/");
+            const id = Number(parts[2]);
+
+            const index = appointments.findIndex(a => a.id === id);
+
+            if (index !== -1) {
+                const deleted = appointments.splice(index, 1)[0];
+                saveAppointments();
+                sendJson(res, 200, deleted);
+            } else {
+                sendJson(res, 404, { error: "Appointment not found" });
+            }
         } else {
-            sendText(res, 400, "TODO");    
+            sendText(res, 400, "An error has occurred");
+            //sendJson(res, 400, {error: "message json"});
         }
     }
     else {
         sendText(res, 404, "TODO");
     }
-
-
-
+    
+    
     // ends server fcn
 });
 
@@ -292,130 +334,3 @@ const server = http.createServer(function (req, res) {
 
 server.listen(3000);
 console.log("Server running on 3000");
-
-
-/*
-
-
-    if (path === "/provider") {
-        serveHtml(res, "./public/provider.html");
-        return;
-    }
-
-    if (path === "/client") {
-        serveHtml(res, "./public/client.html");
-        return;
-    }
-    if (path === "/appt") {
-        serveHtml(res, "./public/appt.html");
-        return;
-    }
-
-    // Serve up index.html for / or /index
-    if (path === "/" || path === "/index") {
-        serveHtml(res, "./public/index.html");
-        return;
-    }
-
-    if (req.url === "/provider.js") {
-        fs.readFile("./public/provider.js", function(err, content) {
-            if (err) {
-                res.writeHead(404, { "Content-Type": "text/plain" });
-                res.end("File not found");
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "application/javascript" });
-            res.end(content);
-        });
-        return;
-    }
-
-        // Serve stylesheet
-    if (req.url === "/style.css") {
-        fs.readFile("./public/style.css", function(err, content) {
-            if (err) {
-                res.writeHead(500);
-                res.end("File not found");
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "text/css" });
-            res.end(content);
-        });
-        return;
-    }
-
-    // Serve  utils
-    if (req.url === "/utils.js") {
-        fs.readFile("./public/utils.js", function(err, content) {
-            if (err) {
-                res.writeHead(500);
-                res.end("File not found");
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "application/javascript" });
-            res.end(content);
-        });
-        return;
-    }
-
-
-    // valid endpoint
-    if (req.method === "POST" && path === "/api/slots") {
-
-        const startTime     = query.startTime;
-        const endTime       = query.endTime;
-        const myName        = query.myName;
-        const myStatus      = query.myStatus;
-        // TODO validate all input
-        const result        = validateSlotTimes(startTime, endTime);
-        
-        if (!result.ok) {
-            sendJson(res, 400, { error: result.message });
-            return;
-        }
-
-        // prevent duplicates
-        if (isDuplicate(startTime, endTime)) {
-            sendJson(res, 409, { error: "This is a duplicate slot" });
-            return;
-        }
-
-        //prevent overlap
-        if (isOverlap(startTime, endTime)) {
-            sendJson(res, 409, { error: "Your requested time slot overlaps on another"});
-            return;
-        }
-
-        // prevent no length appt
-        if (isZeroDuration(startTime, endTime)) {
-            sendJson(res, 409, { error: "Appointments must be at least 1 minute long"});
-            return;
-        }
-        console.log(myStatus)
-        const slot = {
-            id : nextId(),
-            startTime : startTime,
-            endTime : endTime,
-            myName: myName,
-            myStatus : myStatus
-        };
-
-        slots.push(slot);
-        console.log(slots)
-        
-        sendJson(res, 201, slot);
-        return;
-
-    }
-    sendJson(res, 404, { error: "Not found" });
-
-});
-
-
-
-server.listen(3000, function (){
-    console.log("Server running at http://localhost:3000");
-})
-
-
-*/

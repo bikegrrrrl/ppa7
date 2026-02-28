@@ -118,6 +118,10 @@ function renderCalendar(rawSlots) {
                 ) {
                     const item = document.createElement("div");
                     item.className = "slotItem";
+                    // inside renderCalendar(), after creating the slot item
+                    item.addEventListener("click", function() {
+                        openModal(slot); // pass the slot object
+                    });
 
                     // Display just the clock times to keep it readable
                     const startClock = slot.startTime.split("T")[1];
@@ -165,17 +169,11 @@ function sendCreateSlot(startTime, endTime, myStatus, myName) {
 
     const xhr = new XMLHttpRequest();
 
-    const path =
-    // i think change this to appointments
-        "/api/slots?startTime=" + encodeURIComponent(startTime) +
-        "&endTime=" + encodeURIComponent(endTime) +
-        "&myStatus=" + encodeURIComponent(myStatus) +
-        "&myName=" + encodeURIComponent(myName);
-
-    xhr.open("POST", path);
+    xhr.open("POST", "/appointments");
+    // added for server
+    xhr.setRequestHeader("Content-Type", "application/json");
 
     xhr.onload = function () {
-
 
         if (xhr.status === 201) {
 
@@ -187,10 +185,15 @@ function sendCreateSlot(startTime, endTime, myStatus, myName) {
             const data = JSON.parse(xhr.responseText || "{}");
             showMessage(data.error || "Create failed", "error");
         }
-
     };
 
-    xhr.send();
+    // added for JSON.parse(body) in server
+    xhr.send(JSON.stringify({
+        startTime,
+        endTime,
+        myStatus,
+        myName
+    }));
 
 }
 
@@ -207,10 +210,6 @@ function setMonthTitle(month, year) {
         names[month - 1] + " " + String(year);
 
 }
-
-
-
-
 
 
 // Button click creates a slot
@@ -249,235 +248,92 @@ document.getElementById("startTimeInput").addEventListener("change", function ()
 
 });
 
-
-// Highlight today
-// document.addEventListener("DOMContentLoaded", highlightToday);
-
-
-
-
-
-
-/*
-
-function collectFormData() {
-    return {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value
-    };
-}
-
-*/
-
-
-
-
-
-
-// provider.js
-// Interactive UI logic for PPA 3
-// Uses XMLHttpRequest (no Promises, no async/await)
-/*
-function setMessage(text, kind) {
-    const p = document.getElementById("message");
-    p.textContent = text;
-
-    if (kind === "error") {
-        p.className = "error";
-    } else {
-    p.className = "ok";
-    }
-
-}
-
-
+// format date for modal
 function formatDateTime(isoString) {
     const date = new Date(isoString);
-
-    return date.toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
+    if (isNaN(date)) return isoString; // fallback if invalid
+    // options for friendly formatting
+    const options = {
+        weekday: "short",   // e.g., "Tue"
+        year: "numeric",    // e.g., 2026
+        month: "short",     // e.g., "Feb"
+        day: "numeric",     // e.g., 28
+        hour: "2-digit",
         minute: "2-digit",
-        hour12: true
-    });
+        hour12: true        // e.g., 2:30 PM
+    };
+    return date.toLocaleString(undefined, options);
 }
 
+const modal = document.getElementById("appointmentModal");
+const modalClose = document.getElementById("modalClose");
 
-function addSlotRow(slot) {
-    console.log('console slot', slot)
+function openModal(slot) {
+    document.getElementById("modalStartTime").textContent = formatDateTime(slot.startTime);
+    document.getElementById("modalEndTime").textContent = formatDateTime(slot.endTime);
+    document.getElementById("modalStatus").textContent = slot.myStatus;
+    document.getElementById("modalName").textContent = slot.myName;
 
-    const tbody = document.getElementById("slotTableBody");
-    const tr = document.createElement("tr");
-    const td1 = document.createElement("td");
-    const td2 = document.createElement("td");
-    const td3 = document.createElement("td");
-    const td4 = document.createElement("td");
-    const td5 = document.createElement("td"); // new TD for buttons
-    
-    
-    td1.textContent = formatDateTime(slot.startTime);
-    td2.textContent = formatDateTime(slot.endTime);
-    td3.textContent = slot.myStatus;
-    td4.textContent = slot.myName;
-    
-    // delete button
-    // Create delete button
-    //const deleteBtn = document.createElement("button");
-    //deleteBtn.textContent = "Delete";
-
-    // Attach click handler
-    //deleteBtn.addEventListener("click", function () {
-    //    deleteSlot(slot.id);
-    //});
-
-    //td5.appendChild(deleteBtn);
-
-    // Create Details button
-    const detailsBtn = document.createElement("button");
-    detailsBtn.textContent = "Details";
-
-    // Attach click handler to go to a URL with the slot ID
-    detailsBtn.addEventListener("click", function () {
-        // Assuming each slot has a unique 'id' from the server
-        window.location.href = "appt?id=" + encodeURIComponent(slot.id);
-    });
-
-    td5.appendChild(detailsBtn);
-    
-    tr.appendChild(td1);
-    tr.appendChild(td2);
-    tr.appendChild(td3);
-    tr.appendChild(td4);
-    tr.appendChild(td5);
-    
-    
-    tbody.appendChild(tr);
-    
+    modal.style.display = "block";
 }
 
+modalClose.addEventListener("click", function() {
+    modal.style.display = "none";
+});
 
-function parseJsonSafely(text) {
-    try {
-        return { ok: true, value: JSON.parse(text) };
-    } catch (err) {
-        return { ok: false, value: null };
+// Close modal if clicking outside content
+window.addEventListener("click", function(event) {
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+});
+
+
+// Delete button logic
+const modalDeleteButton = document.getElementById("modalDeleteButton");
+
+let currentSlot = null; // track which slot is currently open
+
+function openModal(slot) {
+    currentSlot = slot; // store for deletion
+
+    document.getElementById("modalStartTime").textContent = formatDateTime(slot.startTime);
+    document.getElementById("modalEndTime").textContent = formatDateTime(slot.endTime);
+    document.getElementById("modalStatus").textContent = slot.myStatus;
+    document.getElementById("modalName").textContent = slot.myName;
+
+    modal.style.display = "block";
+}
+
+// Delete the appointment
+modalDeleteButton.addEventListener("click", function() {
+    if (!currentSlot || !currentSlot.id) {
+        showMessage("Error: cannot delete, slot ID missing", "error");
+        return;
     }
 
-}
+    const confirmDelete = confirm("Are you sure you want to delete this appointment?");
+    if (!confirmDelete) return;
 
-
-// POST /api/slots?startTime=...&endTime=...
-function submitNewSlot(startTime, endTime, myName, myStatus) {
-
+    // Send DELETE request to server
     const xhr = new XMLHttpRequest();
-
-    const requestUrl =
-        "/api/slots?startTime=" + encodeURIComponent(startTime) +
-        "&endTime=" + encodeURIComponent(endTime) +
-        "&myStatus=" + encodeURIComponent(myStatus) +
-        "&myName=" + encodeURIComponent(myName);
-
-    // console.log('request url:', requestUrl);
-
-    xhr.open("POST", requestUrl);
-
-    xhr.onload = function () {
-
-        // parse JSON response safely
-        const parsed = parseJsonSafely(xhr.responseText);
-        if (!parsed.ok) {
-            setMessage("Invalid server response", "error");
-            return;
+    console.log(currentSlot.id);
+    xhr.open("DELETE", `/appointments/${Number(currentSlot.id)}`);
+    console.log("after open");
+    xhr.onload = function() {
+        console.log("status:", xhr.status)
+        if (xhr.status === 200) {
+            showMessage("Appointment deleted", "ok");
+            refreshCalendar();
+            modal.style.display = "none";
+        } else {
+            let data = {};
+            try { data = JSON.parse(xhr.responseText); } catch {}
+            showMessage(data.error || "Delete failed else", "error");
         }
-                
-        // if status 201, addSlotRow(slot) and show a success message
-        if (xhr.status === 201) {
-            const slot = parsed.value;
-            addSlotRow(slot);   // show in table
-            setMessage("slot created", "ok"); //success message
-            //const slot = JSON.parse(xhr.responseText);
-            console.log("Created slot:", slot);
-            // console.log('request url:', requestUrl);
-            return;
-        }
-
-        // if status 400 or 409, show the server error message
-        if (xhr.status === 400 || xhr.status === 409) {
-            const err = parsed.value;
-            setMessage(err.error, "error");
-            console.error(err.error);
-            return;
-        }
-        // otherwise, show a generic error message
-        setMessage(err.error, "An error has occurred");
-        console.error("Unexpected server error");
     };
-
     xhr.send();
-}
+});
 
 
-// POST
-// You could have a delete button next to every slot on the table that 
-// holds the timeslot id and use that to identify the timeslot for deletion
-//
-/*
-function deleteSlot(id) {
 
-    const xhr = new XMLHttpRequest();
-
-    const requestUrl =
-        "/api/slots?id=" + encodeURIComponent(id);
-
-    xhr.open("DELETE", requestUrl);
-
-    xhr.onload = function () {
-
-        // response ok
-        if (xhr.status === 204) {
-            // const slot = parsed.value;
-            // addSlotRow(slot);   // show in table
-            // TODO make a deleteRow(slot) 
-            // slots = slots.filter(item => item.id !== id);
-
-            setMessage("Slot deleted", "ok"); //success message
-            // re load slots
-            loadSlots();
-            //const slot = JSON.parse(xhr.responseText);
-            console.log("Deleted slot");
-            return;
-        }
-
-        // parse JSON response safely
-        if (xhr.responseText) {
-            const parsed = parseJsonSafely(xhr.responseText);
-
-            if (!parsed.ok) {
-                setMessage("Invalid server response", "error");
-                return;
-            }
-
-            if (xhr.status === 200 || xhr.status === 201) {
-                setMessage("Slot deleted", "ok");
-                loadSlots();
-                return;
-            }
-
-            if (xhr.status === 400 || xhr.status === 409) {
-                const err = parsed.value;
-                setMessage(err.error, "error");
-                return;
-            }
-        }
-        // otherwise, show a generic error message
-        console.error("Unexpected server error");
-    
-    xhr.send();
-
-    };
-
-    
-}
-*/

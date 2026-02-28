@@ -3,14 +3,35 @@
     "id": 1,
     "startTime": "2026-02-01T09:00",
     "endTime": "2026-02-01T09:30",
-    "myStatus": "Available", 
+    "myStatus": "Available",
     "myName": "Tavi"
   },
   {
-    "id": 2,
-    "startTime": "2026-02-01T10:00",
-    "endTime": "2026-02-01T10:30",
-    "myStatus": "Available", 
-    "myName": "Phil"
+    "startTime": "2026-02-11T15:20",
+    "endTime": "2026-02-11T15:50",
+    "myStatus": "Available",
+    "myName": "",
+    "id": 1772313638148
+  },
+  {
+    "startTime": "2026-02-07T15:28",
+    "endTime": "2026-02-07T15:58",
+    "myStatus": "Available",
+    "myName": "Tomas",
+    "id": 1772314136716
+  },
+  {
+    "startTime": "2026-02-06T15:33",
+    "endTime": "2026-02-06T16:03",
+    "myStatus": "Booked",
+    "myName": "Tomas",
+    "id": 1772314420770
+  },
+  {
+    "startTime": "2026-02-05T20:41",
+    "endTime": "2026-02-05T21:11",
+    "myStatus": "Available",
+    "myName": "",
+    "id": 1772314923555
   }
 ]

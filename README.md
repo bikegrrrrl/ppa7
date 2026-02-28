@@ -1,7 +1,10 @@
-# ppa5
+# ppa6
 
 ## Improvements
-* fixed url parser issues
+* saves to local json
+* display appointment over calendar with modal
+* delete button    
+
 
 ## Features
 
@@ -12,29 +15,13 @@
 * Add datetime picker
 * Checks for overlap on submitted timeslot
 * Modified CSS
-* Renders table of timeslots in order of start time
 * Added auto-population of endTime based on selected startTime by 30 minutes
-* Added appointment detail page to display details for one appointment
-
 * Added utils.js to serve up modules that can be reused
-
 * Used new css and calendar display layout
-* Highlights today's date
-
-
-### branch start ppa5
 * includes calendar
-* retroactively adds functionality from ppa4:
-    * datetime picker
-    * overlap
-    * Added auto-population of endTime based on selected startTime by 30 minutes
-    * check duplicates
-    * TODO: handle 409 errors with duplicates, etc
-    * Save status and name with appt
-
-    
+* highlights today's date
 
 
-## To Do
-* Add delete button (that works) on appt detail page
-
+### obsolete changes
+* Renders table of timeslots in order of start time
+* Added appointment detail page to display details for one appointment
