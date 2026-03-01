@@ -31,10 +31,37 @@ function highlightToday() {
 
 
 // Show a user facing message
-function showMessage(text, kind) {
+/* function showMessage(text, kind) {
     const el = document.getElementById("message");
     el.textContent = text;
     el.className = kind;
+}
+*/
+
+let messageTimeout = null;
+
+function showMessage(text, kind) {
+    const el = document.getElementById("message");
+
+    // Clear any previous timeout
+    if (messageTimeout) {
+        clearTimeout(messageTimeout);
+        messageTimeout = null;
+    }
+
+    el.textContent = text;
+    el.className = kind + " show"; // add show class to fade in
+
+    // After 15 seconds, fade out
+    messageTimeout = setTimeout(function () {
+        el.classList.remove("show");
+
+        // After fade completes, clear text
+        setTimeout(function () {
+            el.textContent = "";
+            el.className = "";
+        }, 800); // matches CSS transition duration
+    }, 15000); // 15 seconds
 }
 
 
@@ -116,19 +143,38 @@ function renderCalendar(rawSlots) {
                 if (slotDay === dayNumber &&
                     slotMonth === currentMonth
                 ) {
+                    //const item = document.createElement("div");
+                    //item.className = "slotItem";
                     const item = document.createElement("div");
-                    item.className = "slotItem";
+
+                    // Base class
+                    item.classList.add("slotItem");
+
+                    // Add color class based on status
+                    if (slot.myStatus === "Booked") {
+                        item.classList.add("booked");
+                    } else if (slot.myStatus === "Available") {
+                        item.classList.add("available");
+                    }
+
+
+
                     // inside renderCalendar(), after creating the slot item
                     item.addEventListener("click", function() {
                         openModal(slot); // pass the slot object
                     });
 
-                    // Display just the clock times to keep it readable
+                    // Display just the clock times to keep it 
                     const startClock = slot.startTime.split("T")[1];
-                    const endClock = slot.endTime.split("T")[1];
+                    if (slot.myName === '') {
+                        slotName = "[Open]";    
+                    } else {
+                        slotName = slot.myName;
+                    }
+                    //const endClock = slot.endTime.split("T")[1];
 
                     const text = document.createElement("span");
-                    text.textContent = startClock + " to " + endClock;
+                    text.textContent = startClock + " - " + slotName;
 
                     item.appendChild(text);
                     cell.appendChild(item);

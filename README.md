@@ -20,6 +20,9 @@
 * Used new css and calendar display layout
 * includes calendar
 * highlights today's date
+* banner messages fade away after 15 
+* Display start time and name on timeslot
+* dynamic color on timeslot to show status - accessible, colorblind compatible
 
 
 ### obsolete changes

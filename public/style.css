@@ -26,7 +26,7 @@
     gap: 6px;
 }
 
-/* Message styles controlled by className in javadscript */
+/* Message styles controlled by className in javascript */
 .ok {
     border: 1px solid #2e7d32;
     padding: 8px;
@@ -67,6 +67,16 @@ h2 {
     border-radius: 4px;
     font-weight: bold;
 }
+
+#message {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+#message.show {
+  opacity: 1;
+}
+
 
 label {
     display: block;
@@ -240,4 +250,34 @@ tr:hover {
 .close:focus {
   color: black;
   text-decoration: none;
+}
+
+
+/* Base appointment style */
+.slotItem {
+  margin: 4px 0;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+/* Available = dark gray */
+.slotItem.available {
+  background-color: #6c757d;      /* dark gray */
+  color: #ffffff;                 /* white text for contrast */
+  border: 1px solid #495057;      /* slightly darker gray */
+}
+
+/* Booked = blue */
+.slotItem.booked {
+  background-color: #0d6efd;      /* strong accessible blue */
+  color: #ffffff;                 /* white text */
+  border: 1px solid #084298;      /* darker blue border */
+}
+
+/* Optional subtle hover effect */
+.slotItem:hover {
+  opacity: 0.9;
 }
