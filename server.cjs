@@ -182,20 +182,6 @@ function validateAppt(startTime, endTime) {
 }
 
 const server = http.createServer(function (req, res) {
-    // const parsed = new URL(req.url, "http://localhost:3000");
-    
-    // Causes the error:
-    /*
-       const parsedUrl = url.parse(request.url, true);
-                      ^
-
-    ReferenceError: url is not defined
-    at Server.<anonymous> (/Users/lm28425/Documents/js_20262/ppa6/server.cjs:148:23)
-    at Server.emit (node:events:508:20)
-    at parserOnIncoming (node:_http_server:1213:12)
-    at HTTPParser.parserOnHeadersComplete (node:_http_common:123:17)
-    */
-    //const parsedUrl = url.parse(request.url, true);
     
     const parsedUrl = new URL(req.url, "http://localhost:3000");
     const path = parsedUrl.pathname;
@@ -321,19 +307,98 @@ const server = http.createServer(function (req, res) {
         deleteAppointment(req, res, parsedUrl);
         console.log('deleting with del function');
         return;
+    } else if (req.method === "PUT" && parsedUrl.pathname.startsWith("/appointments/")) {
+        console.log('calling updateAppointmentFull');
+        updateAppointmentFull(req, res, parsedUrl);
+        return;
+        
+    } else if (req.method === "PATCH" && parsedUrl.pathname.startsWith("/appointments/")) {
+        console.log('calling updateAppointmentPartial');
+        updateAppointmentPartial(req, res, parsedUrl);
+        return;
     }
 });
 
-function openChangeTimeForm() {
-  // PATCH /appointments/:id
-  // TODO: locate the appointment by id
-  // TODO: merge provided fields
-  // TODO: validate the result
-  // TODO: save to appointments.json
+function updateAppointmentPartial(req, res, parsedUrl) {
+    console.log('in updateapptpartial');
+    const parts = parsedUrl.pathname.split("/");
+    const id = Number(parts[2]);
+    let body = "";
+    
+    req.on("data", chunk => {
+        body += chunk;
+    });
+    
+    req.on("end", () => {
+
+        try {
+            const updates = JSON.parse(body);
+            // TODO: locate the appointment by id
+            const index = appointments.findIndex(a => a.id === id);
+
+            if (index !== -1) {
+
+                // TODO: merge provided fields
+                appointments[index] = {
+                    ...appointments[index],
+                    ...updates
+                };
+
+                // TODO: validate the result
+
+                // TODO: save to appointments.json
+                saveAppointments();
+
+                console.log("Patched appointment:", appointments[index]);
+
+                sendJson(res, 200, appointments[index]);
+
+            } else {
+                sendJson(res, 404, { error: "Appointment not found" });
+            }
+
+        } catch (err) {
+            sendJson(res, 400, { error: "Invalid JSON" });
+        }
+
+    });
 }
 
-function updateAppointmentFull(id, updatedAppointment) {
+
+
+
+function updateAppointmentFull(req, res, parsedUrl) {
     // PUT /appointments/:id
+    console.log('in updateapptfull');
+    const parts = parsedUrl.pathname.split("/");
+        const id = Number(parts[2]);
+        let body = "";
+        req.on("data", chunk => {
+            body += chunk;
+        });
+        req.on("end", () => {
+            try {
+                const updated = JSON.parse(body);
+                const index = appointments.findIndex(a => a.id === id);
+                if (index !== -1) {
+                    appointments[index] = updated;
+                    saveAppointments();
+                    console.log("Updated appointment:", updated);
+                    sendJson(res, 200, updated);
+
+                } else {
+                    sendJson(res, 404, { error: "Appointment not found" });
+                }
+
+            } catch (err) {
+                sendJson(res, 400, { error: "Invalid JSON" });
+            }
+
+        });
+    
+    
+    
+    
     // TODO: locate the appointment by id
     const index = appointments.findIndex(a => a.id === id);
     

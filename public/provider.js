@@ -348,6 +348,8 @@ const modalClose = document.getElementById("modalClose");
 // this button works
 const modalDeleteButton = document.getElementById("deleteBtn");
 
+// this does not
+const saveBtn = document.getElementById("saveBtn");
 
 
 let currentSlot = null; //
@@ -363,7 +365,7 @@ function openModal(slot) {
     // store original appointment for comparison later
     originalAppointment = { ...slot };
 
-    // TODO the current dates and times don't get into the date time picker
+    // populate current appointment values into modal
     document.getElementById("editStartTime").value = slot.startTime;
     document.getElementById("editEndTime").value = slot.endTime;
     document.getElementById("editStatus").value = slot.myStatus;
@@ -374,6 +376,7 @@ function openModal(slot) {
 
 // when user presses save
 function getEditedAppointment() {
+    console.log('save button clicked')
     return {
         id: currentSlot.id,
         startTime: document.getElementById("editStartTime").value,
@@ -382,9 +385,6 @@ function getEditedAppointment() {
         myName: document.getElementById("editName").value
     };
 }
-
-
-
 
 
 
@@ -421,14 +421,6 @@ function saveAppointmentChanges() {
 
     xhr.send(JSON.stringify(payload));
 }
-
-
-
-
-// this was throwing a null error when landing on page the first time
-//modalClose.addEventListener("click", function() {
-//    modal.style.display = "none";
-//});
 
 
 // Close modal if clicking outside content
@@ -479,38 +471,71 @@ function patchAppointment() {
 
 function openAppointmentModal(appointment) {
 
-
 }
 
 function saveAppointmentChanges() {
+    console.log('in save appt changes');
     // TODO: read form inputs
-    // TODO: construct updated appointment object
-
-    ["StartTime","EndTime","Status","Name"].forEach(field => {
-        document.getElementById("modal" + field).style.display = "none";
-        document.getElementById("edit" + field).style.display = "inline";
-    });
-
-
-    // TODO: PUT request to server
-    const data = {
+    const edited = {
+        id: currentSlot.id,
         startTime: document.getElementById("editStartTime").value,
         endTime: document.getElementById("editEndTime").value,
         myStatus: document.getElementById("editStatus").value,
-        myName: document.getElementById("editName").value,
-        id: currentSlot.id
+        myName: document.getElementById("editName").value
     };
 
+    const changes = {};
+    // TODO: construct updated appointment object
+    // ignore id when comparing
+    const fieldsToCompare = ["startTime", "endTime", "myStatus", "myName"];
+
+    fieldsToCompare.forEach(key => {
+        if (edited[key] !== originalAppointment[key]) {
+            changes[key] = edited[key];
+        }
+    });
+
+    const changedCount = Object.keys(changes).length;
+    const totalFields = fieldsToCompare.length;
+
+    if (changedCount === 0) {
+        alert("No changes made");
+        return;
+    }
+
+    let method;
+    let payload;
+
+    if (changedCount === totalFields) {
+        // everything changed → PUT
+        method = "PUT";
+        payload = edited;
+    } else {
+        // partial change → PATCH
+        method = "PATCH";
+        payload = changes;
+    }
+
+    console.log("method:", method);
+    console.log("payload:", payload);
+
+    // TODO: PUT request to server
     const xhr = new XMLHttpRequest();
-    xhr.open("PUT", `/appointments/${currentSlot.id}`);
+    xhr.open(method, `/appointments/${currentSlot.id}`);
     xhr.setRequestHeader("Content-Type", "application/json");
 
     xhr.onload = function() {
-        refreshCalendar();
-        modal.style.display = "none";
+        console.log("status:", xhr.status);
+
+        if (xhr.status === 200) {
+            refreshCalendar();
+            modal.style.display = "none";
+        } else {
+            console.error("Update failed:", xhr.responseText);
+        }
     };
 
-    xhr.send(JSON.stringify(data));
+    xhr.send(JSON.stringify(payload));
 }
 
 

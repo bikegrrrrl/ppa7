@@ -1,44 +1,51 @@
 [
   {
     "id": 1,
-    "startTime": "2026-03-01T09:00",
-    "endTime": "2026-03-01T09:30",
-    "myStatus": "Available",
+    "startTime": "2026-03-03T09:00",
+    "endTime": "2026-03-03T09:30",
+    "myStatus": "Booked",
     "myName": "Tavi"
   },
   {
     "startTime": "2026-03-11T21:22",
     "endTime": "2026-03-11T21:52",
-    "myStatus": "Booked",
-    "myName": "Tomas",
+    "myStatus": "Available",
+    "myName": "",
     "id": 1773454963616
   },
   {
-    "startTime": "2026-03-11T13:22",
-    "endTime": "2026-03-11T13:52",
-    "myStatus": "Available",
-    "myName": "",
+    "startTime": "2026-03-11T14:22",
+    "endTime": "2026-03-11T14:52",
+    "myStatus": "Booked",
+    "myName": "Tavi",
     "id": 1773454985443
   },
   {
-    "startTime": "2026-03-13T22:24",
-    "endTime": "2026-03-13T22:54",
-    "myStatus": "Available",
-    "myName": "",
+    "startTime": "2026-03-20T22:24",
+    "endTime": "2026-03-20T22:54",
+    "myStatus": "Booked",
+    "myName": "Ophelia",
     "id": 1773455065544
   },
   {
     "startTime": "2026-04-04T06:56",
     "endTime": "2026-04-04T07:26",
     "myStatus": "Booked",
-    "myName": "Lucy",
+    "myName": "Lucinda",
     "id": 1773489378808
   },
   {
     "startTime": "2026-02-05T08:02",
     "endTime": "2026-02-05T08:32",
-    "myStatus": "Available",
+    "myStatus": "Booked",
     "myName": "Joaquin",
     "id": 1773489767260
+  },
+  {
+    "startTime": "2026-03-21T08:39",
+    "endTime": "2026-03-21T09:09",
+    "myStatus": "Booked",
+    "myName": "Tavi",
+    "id": 1773754767874
   }
 ]
