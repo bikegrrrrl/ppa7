@@ -33,6 +33,7 @@ function loadAppointments() {
     
 }
 
+
 function saveAppointments() {
     // TODO list: decide how you want the JSON formatted (pretty vs compact).
     try {
@@ -54,10 +55,12 @@ function sendJson(response, statusCode, data) {
 }
 
 
+// TODO not using this?
 function sendText(response, statusCode, message) {
     response.writeHead(statusCode, {"Content-Type": "text/plain"});
     response.end(message);
 }
+
 
 loadAppointments();
 
@@ -74,27 +77,6 @@ function serveHtml(res, filePath) {
         res.end(content);
     });
 }
-
-
-
-/* what i don't like about this is that if you start deleting timeslots, there's
-a chance the id numbers get corrupted */
-/*function nextId() {
-
-    return slots.length + 1;
-
-}
-*/
-
-/*
-function validateSlotStatus(myName, myStatus) {
-    if (myStatus === 'Booked' && myName == '' ) {
-        return false; //{ok: false, message: "A booked appointment must have a student name"};
-    } else {
-        return true; //{ok: true, message: "" };
-    }
-}
-*/
 
 
 function validateSlotTimes(startTime, endTime) {
@@ -132,7 +114,7 @@ function isDuplicate(startTime, endTime) {
     return false;
 }
 
-// Check time overlap
+
 function isOverlap(reqStartTime, reqEndTime) {
     // return true if timeslot overlaps any other timeslot
     for (const s in appointments) {
@@ -146,7 +128,7 @@ function isOverlap(reqStartTime, reqEndTime) {
     return false;
 }
 
-// Check time isn't duplicate
+
 function isZeroDuration(reqStartTime, reqEndTime) {
     // return true if timeslot overlaps any other timeslot
     // Scenario: overlap where new timeslot overlaps beginning of another
@@ -158,11 +140,12 @@ function isZeroDuration(reqStartTime, reqEndTime) {
     return false;
 }
 
-function validateAppt(startTime, endTime) {
+
+// TODO make this more robust
+function validateAppt(startTime, endTime, myStatus, myName, description) {
     const result = validateSlotTimes(startTime, endTime);
 
     if (!result.ok) {
-        //return {res, 400, { error: result.message });
         return {ok: false, message: result.message };
     }
     if (isDuplicate(startTime, endTime))
@@ -174,9 +157,10 @@ function validateAppt(startTime, endTime) {
     if (isZeroDuration(startTime, endTime))
         return { ok: false, message: "Appointments must be at least 1 minute long"
     };
-    //if (!validateSlotStatus(myName, myStatus))
-    //    return {ok: false, message: "Booked appointments must have a student name"
-    //}
+    console.log('name test', myName);
+    if ((!myName || myName.trim() === "") && myStatus === "Booked") {
+        return { ok: false, message: "Booked appointments must have an attendee name" };
+    }
 
     return {ok: true};
 }
@@ -193,24 +177,7 @@ const server = http.createServer(function (req, res) {
     if (req.url === "/provider") { filePath = "./public/provider.html"; }
     if (req.url === "/client") { filePath = "./public/client.html"; }
     
-   /*if (req.method === "GET" && path === "/api/slots") {
-    // check if query.id is provided
-    if (query.id) {
-        const slotId = parseInt(query.id, 10);
-        const slot = slots.find(s => s.id === slotId);
-        if (!slot) {
-            sendJson(res, 404, { error: "Slot not found" });
-            return;
-        }
-        sendJson(res, 200, slot);
-        return;
-    }
-
-    // if no id, return all slots
-    sendJson(res, 200, slots);
-    return;
-}
-    */
+ 
 
             // Serve stylesheet
     if (req.url === "/style.css") {
@@ -286,7 +253,7 @@ const server = http.createServer(function (req, res) {
             try {
                 const newAppointment = JSON.parse(body);
                 newAppointment.id = Date.now(); // TODO use another number?
-                const validation = validateAppt(newAppointment.startTime, newAppointment.endTime);
+                const validation = validateAppt(newAppointment.startTime, newAppointment.endTime, newAppointment.myStatus, newAppointment.myName);
                 if (!validation.ok) {
                     res.writeHead(400, {"Content-Type": "application/json"});
                     res.end(JSON.stringify({ error: validation.message }));
@@ -320,7 +287,6 @@ const server = http.createServer(function (req, res) {
 });
 
 function updateAppointmentPartial(req, res, parsedUrl) {
-    console.log('in updateapptpartial');
     const parts = parsedUrl.pathname.split("/");
     const id = Number(parts[2]);
     let body = "";
@@ -333,7 +299,7 @@ function updateAppointmentPartial(req, res, parsedUrl) {
 
         try {
             const updates = JSON.parse(body);
-            // TODO: locate the appointment by id
+            // locate the appointment by id
             const index = appointments.findIndex(a => a.id === id);
 
             if (index !== -1) {

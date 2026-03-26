@@ -206,7 +206,7 @@ function auditTimeInputs(startTime, endTime) {
 
 
 // Send POST the new timeslot then refresh the calendar on success
-function sendCreateSlot(startTime, endTime, myStatus, myName) {
+function sendCreateSlot(startTime, endTime, myStatus, myName, description) {
 
     // new request
     const xhr = new XMLHttpRequest();
@@ -233,7 +233,8 @@ function sendCreateSlot(startTime, endTime, myStatus, myName) {
         startTime,
         endTime,
         myStatus,
-        myName
+        myName,
+        description
     }));
 
 }
@@ -295,8 +296,9 @@ document.getElementById("createSlotButton").addEventListener("click", function (
     const endTime = document.getElementById("endTimeInput").value;
     const myStatus = document.getElementById("myStatus").value;
     const myName = document.getElementById("myName").value;
+    const description = document.getElementById("description").value;
 
-    sendCreateSlot(startTime, endTime, myStatus, myName);
+    sendCreateSlot(startTime, endTime, myStatus, myName, description);
 
 });
 
@@ -370,6 +372,8 @@ function openModal(slot) {
     document.getElementById("editEndTime").value = slot.endTime;
     document.getElementById("editStatus").value = slot.myStatus;
     document.getElementById("editName").value = slot.myName;
+    document.getElementById("editDescription").value = slot.description;
+    
 
     modal.style.display = "block";
 }
@@ -382,7 +386,8 @@ function getEditedAppointment() {
         startTime: document.getElementById("editStartTime").value,
         endTime: document.getElementById("editEndTime").value,
         myStatus: document.getElementById("editStatus").value,
-        myName: document.getElementById("editName").value
+        myName: document.getElementById("editName").value,
+        description: document.getElementById("editDescription").value
     };
 }
 
@@ -481,13 +486,14 @@ function saveAppointmentChanges() {
         startTime: document.getElementById("editStartTime").value,
         endTime: document.getElementById("editEndTime").value,
         myStatus: document.getElementById("editStatus").value,
-        myName: document.getElementById("editName").value
+        myName: document.getElementById("editName").value,
+        description: document.getElementById("editDescription").value
     };
 
     const changes = {};
     // TODO: construct updated appointment object
     // ignore id when comparing
-    const fieldsToCompare = ["startTime", "endTime", "myStatus", "myName"];
+    const fieldsToCompare = ["startTime", "endTime", "myStatus", "myName", "description"];
 
     fieldsToCompare.forEach(key => {
         if (edited[key] !== originalAppointment[key]) {
